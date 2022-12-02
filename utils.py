@@ -146,3 +146,10 @@ def line_point_intersect(x1, y1, x2, y2, px, py):
   #note we use the buffer here to give a range, rather
   #than one #
   return (d1+d2 >= lineLen-buffer and d1+d2 <= lineLen+buffer) 
+
+
+def get_rect_verts(left, top, w, h):
+    """ return vertices of rectangle given top, left, w, and h
+    """
+    [print([(left, top), (left + w, top), (left + w, top + h), (left, top + h)])]
+    return [(left, top), (left + w, top), (left + w, top + h), (left, top + h)]
