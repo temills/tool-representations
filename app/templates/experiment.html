@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Tool Task</title>
+        <script src="../static/jspsych/jspsych.js"></script>
+        <script src="../static/jspsych/plugin-html-keyboard-response.js"></script>
+        <script src="../static/jspsych/plugin-html-button-response.js"></script>
+        <script src="../static/jspsych/plugin-canvas-game.js"></script>
+        <script src="../static/jspsych/plugin-dot-task.js"></script>
+        <script src="../static/jspsych/plugin-survey-text.js"></script>
+        <script src="../static/jspsych/plugin-survey-multi-choice.js"></script>
+        <link href="../static/jspsych/jspsych.css" rel="stylesheet" type="text/css" />
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <body>
+    </body>
+    <script>
+
+    //TODO:
+    //handle multiple key presses in plugin
+        //maybe rewrite keyboard handler, not rly sure why it's currently so complicated
+    //write update game function in views to actually create game and step
+    //take in input
+    //do we want to do a callback even when there's no user input? i feel like we do dang it
+    //so some while true function (maybe call every .1 seconds or something),
+        //check for input
+        //send input with cb (prob nothing, but maybe key press)
+        //get new game state from cb and draw game
+
+
+    var completion_code = "cc"
+    
+
+
+    var jsPsych = initJsPsych({
+        //show_progress_bar: true
+    });
+
+    
+    var test = {
+        type: jsPsychCanvasGame,
+    }
+
+
+    timeline = [test]
+
+    jsPsych.run(timeline);
+
+    /*
+
+    //get id 
+    var get_id = {
+	    type: jsPsychSurveyText,
+        preamble: function() {
+            html = "<div>Welcome!<br>We need your consent to proceed.</div><br>"
+            html += "<div style=text-align:left>You have been invited to take part in a research study involving a prediction game. By completing this study, you are participating in a study being performed by cognitive scientists in the MIT Department of Brain and Cognitive Science. The purpose of this research is to understand how people make predictions. You must be at least 18 years old to participate. There are neither specific benefits nor anticipated risks associated with participation in this study. Your participation in this study is completely voluntary and you can withdraw at any time by simply exiting the study. Choosing not to participate or withdrawing will result in no penalty. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you, and any information you provide will not be shared in association with any personally identifying information.<br><br>If you have questions about this research, please contact the researchers by sending an email to temills@mit.edu. These researchers will do their best to communicate with you in a timely, professional, and courteous manner. If you have questions regarding your rights as a research subject, or if problems arise which you do not feel you can discuss with the researchers, please contact the MIT Institutional Review Board.<br>Your participation in this research is voluntary. You may discontinue participation at any time during the research activity. You may print a copy of this consent form for your records.</div>"
+            html += "<br><div>To indicate your consent, please enter your Prolific Worker ID below.<br></div>"
+            return [html]
+        },
+        questions: [{prompt: "", name: "subject_id", required: true}],
+        on_finish: function(data){
+            subject_id = data['response']['subject_id']
+        }
+    }
+
+
+    var instructions1 = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "In this task, you will watch dots appear on your screen one by one, and repeatedly <b>predict the location of the next dot</b>.<br><br>",
+        choices: ['continue']
+    }
+    var instructions2 = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "On each of <b>" + num_trials + " trials</b>, dots will appear one by one within a region of your screen.<br>After each new dot appears, click within this region where you think the next dot will be.<br>After you make your guess, the next dot will appear at its true location. You can take as much time as you'd like in between predictions.<br>The trial will end after you make <b>at most 25 guesses</b>, or when you begin to correctly guess the location of each dot.<br>Click the button below to begin!<br><br>",
+        choices: ['begin']
+    }
+
+    var trial = {
+        type: jsPsychDotTask,
+        stimulus: '',
+        choices: [''],
+        dot_positions: function() {
+            return [my_func_data[func_idx]["xs"], my_func_data[func_idx]["ys"]]
+        },
+        dot_radius: dot_rad,
+        rect_dims: [rect_width, rect_height],
+        prompt: "<p>Within the shaded region, click where you think the next dot will be.</p>",
+        button_html: function() {
+            //rectangle with first dot
+            dot_html = '<div id="circle" style="position:absolute; bottom:' + (my_func_data[func_idx]["ys"][0]-dot_rad) + 'px; left:' + (my_func_data[func_idx]["xs"][0]-dot_rad) + 'px; width:' + (dot_rad * 2) + 'px; height:'+ (dot_rad * 2) + 'px;-webkit-border-radius: ' + dot_rad + 'px;-moz-border-radius:' + dot_rad + 'px;border-radius:' + dot_rad + 'px;background: ' + static_color + ';"></div>';
+            html = '<div id="target" style="position:relative;width:' + rect_width + 'px; height:' + rect_height + 'px; background-color: #C2CADA; margin: auto;">' + dot_html + '</div>'
+            return html
+        },
+        dot_color: static_color,
+    };
+
+    var func_instr = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+            return 'Trial <b>' + (func_idx+1) + '</b>/' + my_func_data.length + '<br><br>Press any key to begin';
+        }
+    };
+
+
+    var trial_feedback1 = {
+        type: jsPsychHtmlSliderResponse,
+        stimulus: "How confident are you that you learned the pattern?<br><br>",
+        labels: ["not confident","very confident"],
+        slider_width: 600,
+        require_movement: true,
+    }
+    var trial_feedback2 = {
+        type: jsPsychHtmlSliderResponse,
+        stimulus: "How complicated was the pattern?<br><br>",
+        labels: ["not complicated","very complicated"],
+        slider_width: 600,
+        require_movement: true,
+        on_finish: function() {
+            data = jsPsych.data.get().last(3).values()
+
+            response_data = {}
+            response_data.complexity = data[2].response
+            response_data.complexity_rt = data[2].rt
+
+            response_data.confidence = data[1].response
+            response_data.confidence_rt = data[1].rt
+
+            response_data.response_x = data[0].response_x
+            response_data.response_y = data[0].response_y
+            response_data.rts = data[0].rt
+            response_data.true_x = my_func_data[func_idx]["xs"]
+            response_data.true_y = my_func_data[func_idx]["ys"]
+            response_data.func = my_func_data[func_idx]["func_str"]
+            response_data.func_idx = func_idx
+            response_data.subject_id = subject_id
+            response_data.exp_phase = 'trial'
+
+            save_data(response_data)
+        }
+    }
+
+    //loop thru each function
+    var run_exp = {
+        timeline: [func_instr, trial, trial_feedback1, trial_feedback2],
+        //runs after completion of timeline
+        loop_function: function(){
+            //iterate function idx
+            func_idx = func_idx + 1    
+            if (func_idx < my_func_data.length) {
+                return true
+            } else {
+                return false;
+            }
+        }
+    }
+
+    var get_comments = {
+        type: jsPsychSurveyText,
+        questions: [{prompt: "Please share any comments you have about your experience taking this study.<br>Thank you!", rows: 6, columns: 60}]
+    }
+
+    //demographic information
+    var demo_instructions = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<div>Finally, please provide us with some demographic information.</div><div>Press any key to begin.</div>",
+    };
+
+    var background1 = {
+        type: jsPsychHtmlSliderResponse,
+        stimulus: "How strong is your background in computer programming?<br><br>",
+        labels: ["not strong","very strong"],
+        slider_width: 600,
+        require_movement: true,
+    }
+
+    var background2 = {
+        type: jsPsychHtmlSliderResponse,
+        stimulus: "How strong is your background in math?<br><br>",
+        labels: ["not strong","very strong"],
+        slider_width: 600,
+        require_movement: true,
+    }
+
+    var background3 = {
+        type: jsPsychSurveyText,
+        questions: [{prompt: "Please briefly describe your background in math and computer programming.<br>", rows: 6, columns: 60}]
+    }
+
+
+    var demo1 = {
+        type: jsPsychSurveyText,
+        preamble: '',
+        questions: [{prompt: "How old are you?", required: true}, {prompt: "What is your native language?", required: true}, {prompt: "What is your nationality?", required: true}, {prompt: "In which country do you live?", required: true}, {prompt: "What is your gender identity?", required:true}],
+    };
+
+
+    //saves data on completion of this trial
+    var demo2 = {
+        type: jsPsychSurveyMultiChoice,
+        preamble: "",
+        questions: [
+            {prompt: "Are you a student?", options: ["Yes","No"], required: true},
+            {prompt: "What is your education level?", options: ["Grade/elementary school","High school","Some college or university","College or university degree","Graduate degree, Masters","PhD"], required: true}
+        ],
+        on_finish: function() {
+            data = {}
+            data.subject_id = subject_id
+            data.exp_phase = 'subject_info';
+            //comments, inst, bg1, bg2, bg3, d1, d2
+            var lastData = jsPsych.data.get().last(7).values();
+            data.comments = lastData[0]['response']['Q0']
+            data.comments_rt = lastData[0]['rt']
+
+            data.prog_bg = lastData[2]['response']
+            data.math_bg = lastData[3]['response']
+            data.bg_comments = lastData[4]['response']['Q0']
+
+            var demo1 = lastData[5]['response'];
+            var demo2 = lastData[6]['response'];
+
+            data.age = demo1['Q0'];
+            data.language = demo1['Q1'];
+            data.nationality = demo1['Q2'];
+            data.country = demo1['Q3'];
+            data.gender = demo1['Q4'];
+            data.student = demo2['Q0'];
+            data.education = demo2['Q1'];
+            data.completion_code = completion_code;
+            save_data(data);
+        },
+	};
+
+    var debrief = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "<h4>Thank you for your participation!</h4><h4>In order to complete this HIT, you must enter the code below into Prolific.</h4><h4>Your secret completion code is:<br><br>" + completion_code + "<br><br>Copy this code now.</h4><h4>Once you've copied it, click the button below to leave this window.</h4>",
+        choices: ['Finish']
+    };
+
+    //save data to database
+    function save_data(data) {
+        //var url = "study"; //use this when running on server
+        var url = "/"; //use this when running locally
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({
+            data
+        }));
+    }
+
+    */
+
+    </script>
+</html>

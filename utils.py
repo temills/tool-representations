@@ -1,6 +1,27 @@
 import numpy as np
 import math
 
+
+def flip_polygon_vertical(polygon, center_x):
+    return [(2*center_x - polygon[i][0], polygon[i][1]) for i in range(len(polygon))]
+
+def get_tool_vertices(tool_attributes, left1, top1, angle):
+    """ returns list of vertices for tool based on left/top position of handle and angle of tool (0 is vertical handle)
+        right now position is position before tool rotation """
+    #w/h for handle and hook tool parts
+    (w1,h1,h2,w2) = tool_attributes
+    #position handle tool part
+    vs1 = [(left1,top1), (left1+w1,top1), (left1+w1, top1+h1), (left1, top1+h1)]
+    #position hook tool part
+    left2 = left1 + w1
+    top2 = top1
+    vs2_unrotated = [(left2, top2), (left2 + w2, top2), (left2 + w2, top2 + h2), (left2, top2 + h2)]
+    vs2 = rotate_polygon(vs2_unrotated[0], vs2_unrotated, 0.3)
+    #rotate all tool parts
+    vs1 = rotate_polygon((left1, top1), vs1, angle)
+    vs2 = rotate_polygon((left1, top1), vs2, angle)
+    return [vs1, vs2]
+
 def rotate_polygon(origin, vs, angle):
     return [rotate_vertex(origin,v,angle) for v in vs]
 
@@ -81,11 +102,10 @@ def do_polygons_intersect(a, b):
 
     return True
 
-
+#adapted from https://www.jeffreythompson.org/collision-detection/poly-circle.php
 #POLYGON/CIRCLE
 def poly_circle_intersect(vertices, cx, cy, r):
   #go through each of the vertices, plus the next vertex in the list
-  next = 0
   for i in range(len(vertices)):
     v1 = vertices[i]
     if i+1<len(vertices):
@@ -147,9 +167,28 @@ def line_point_intersect(x1, y1, x2, y2, px, py):
   #than one #
   return (d1+d2 >= lineLen-buffer and d1+d2 <= lineLen+buffer) 
 
+#POLYGON/POINT
+def point_inside_poly(vertices, px, py):
+  collision = False
+
+  #go through each of the vertices, plus the next
+  #vertex in the list
+  for i in range(len(vertices)):
+    v1 = vertices[i]
+    if i+1<len(vertices):
+        v2 = vertices[i+1]
+    else:
+        v2 = vertices[0]
+
+    #compare position, flip 'collision' variable back and forth
+    if (((v1[1] > py and v2[1] < py) or (v1[1] < py and v2[1] > py)) and
+        (px < (v2[0] - v1[0]) * (py - v1[1]) / (v2[1] - v1[1]) + v1[0])):
+            collision =  not collision
+  return collision
+
+
 
 def get_rect_verts(left, top, w, h):
     """ return vertices of rectangle given top, left, w, and h
     """
-    [print([(left, top), (left + w, top), (left + w, top + h), (left, top + h)])]
     return [(left, top), (left + w, top), (left + w, top + h), (left, top + h)]
