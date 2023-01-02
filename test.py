@@ -4,8 +4,8 @@ import pygame as pg
 import pymunk as pm
 import math
 import numpy as np
-from utils import *
-from classes import *
+from .utils import *
+from .classes import *
 
 BLACK = (  0,   0,   0)
 WHITE = (255, 255, 255)
@@ -15,6 +15,9 @@ BLUE  = (  0,   0, 255)
 SCREEN_WIDTH  = 1000
 SCREEN_HEIGHT = 750
 
+game = ""
+did_init = False
+trial = 0
 #sometimes goes thru walls a bit
 #this is especially a problem bc then when you release after forcing into a wall, it's a huge force and launches it above the grasp line
 
@@ -75,22 +78,10 @@ def generate_tool_attributes():
     #min_hook_length = 10
     #max_hook_length = 90
 
-
     handle_width = np.random.normal(50, 10, 1)[0]
     hook_length = np.random.normal(50, 15, 1)[0]
 
     return handle_width, handle_length, hook_width, hook_length
-
-
-
-"""
-do get tool_verts n times with appropriate pos so non-overlapping
-we don't really want these tools to exist - want them to be chosen if we reset
-maybe still exist out in the side
-some side panal where you see them, can click to choose and it will show up in the tool zone
-
-"""
-
 
 def setup(task_type, trial):
     n_tools = 3
@@ -110,7 +101,78 @@ def setup(task_type, trial):
     #poke task
     else:
         return [GameState(wall_pos= edges + [[(200,200),(220,200),(220,300),(200,300)],[(280,200),(300,200),(300,300),(280,300)]],ball_pos=(250,250), tool_attrs=tool_attrs, tool_start_pos = tool_start_pos, tool_start_angle = tool_start_angle, grasp_pos=350, grasp_width=970, goal_pos=(225, 120, 50, 50))][trial]
+
+
 ################ run game ###################
+def update_game(user_input):
+    return {'ball_pos': [200,300]}
+    print(user_input)
+    global did_init
+    global game
+    #to start, init pygame env and add game elements
+    if not did_init:
+        game = setup(task_type, trial)
+        did_init = True
+
+    if game.active_tool == None:
+        if user_input["click_x"] != 'null':
+            game.pick_tool([user_input["click_x"],user_input["click_y"]])
+        if user_input["Enter"]:
+            game.reset()
+    else:
+        if user_input["click_x"] != 'null':
+            game.active_tool.grasp([user_input["click_x"],user_input["click_y"]], game.grasp_boundary)
+        if user_input["Enter"]:
+            game.reset()
+        
+        #flip tool
+        #if user_input['f']:
+            #game.active_tool.flip()
+
+        #next check for key presses for movements
+        move = False
+        if user_input['ArrowUp']:
+            move = True
+            if user_input['r']:
+                game.active_tool.rotate(dir, game.wall_list, game.ball)
+            else:
+                game.active_tool.move(dir, game.wall_list, game.ball, game.grasp_boundary) 
+        if user_input['ArrowDown']:
+            move = True
+            if user_input['r']:
+                game.active_tool.rotate(dir, game.wall_list, game.ball)
+            else:
+                game.active_tool.move(dir, game.wall_list, game.ball, game.grasp_boundary) 
+        if user_input['ArrowLeft']:
+            move = True
+            if user_input['r']:
+                game.active_tool.rotate(dir, game.wall_list, game.ball)
+            else:
+                game.active_tool.move(dir, game.wall_list, game.ball, game.grasp_boundary) 
+        if user_input['ArrowRight']:
+            move = True
+            if user_input['r']:
+                game.active_tool.rotate(dir, game.wall_list, game.ball)
+            else:
+                game.active_tool.move(dir, game.wall_list, game.ball, game.grasp_boundary) 
+        if not move:
+            game.active_tool.stop()
+
+    #check if ball is in goal
+    if game.goal.goal_loc.collidepoint(game.ball.body.position):
+        game.ball.body._set_velocity((0,0))
+        success = True
+
+    #step game
+    game.space.step(3/FPS)
+
+    #now get game state and return
+    #we should already have unchanging info: ball size, list of tools and their dims, walls, grasp boundary, goal
+    
+    #which tool is active, tool pos/rotation/flip, ball pos, is in goal
+    return {'ball_pos': game.ball.body.position}
+
+
 def run_game():
     num_trials = 3
     for trial in range(num_trials):
@@ -183,6 +245,5 @@ def run_game():
             clock.tick(FPS)
             game.space.step(1/FPS)
 
+pg.init()
 run_game()
-pg.quit()
-

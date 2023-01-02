@@ -9,39 +9,78 @@
         <script src="../static/jspsych/plugin-dot-task.js"></script>
         <script src="../static/jspsych/plugin-survey-text.js"></script>
         <script src="../static/jspsych/plugin-survey-multi-choice.js"></script>
+        <script src = '../static/trials.js'></script>
         <link href="../static/jspsych/jspsych.css" rel="stylesheet" type="text/css" />
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <body>
+        <div id="all_trials"></div>
     </body>
     <script>
 
     //TODO:
-    //handle multiple key presses in plugin
-        //maybe rewrite keyboard handler, not rly sure why it's currently so complicated
-    //write update game function in views to actually create game and step
-    //take in input
-    //do we want to do a callback even when there's no user input? i feel like we do dang it
-    //so some while true function (maybe call every .1 seconds or something),
-        //check for input
-        //send input with cb (prob nothing, but maybe key press)
-        //get new game state from cb and draw game
+    //try to draw things out in pygame and see if it's normal
+    //make additional trials for each condition
+    //make ambiguous trial
+    //build out experiment - first run 10 trials, then (maybe) go into ambiguous task and/or similarity phase
+        //in similarity phase, randomly give (or precompute) tool pairs, ask for judgement
+        //
 
+    //randomly moves sometimes, when i rotate it moves the opposite way rlly fast
+    //wont move up anymore, stops when it hits the ball...
+    //weird stuff
+        //print game state? need to get position/rotation/velocity of all objects
+    //it's not saying tool is hitting a wall or hitting the grasp bound
 
+    //insufficient resources error causes everything to glitch - maybe do try catch
+    //sometimes still getting uncaught in promise error
+    //could make it so each  dir is stopped seperately when not pressed
+    //could change call - boolean thing didnt work
+
+    //figure out wen to call get_trial, flow of experiment
     var completion_code = "cc"
-    
-
 
     var jsPsych = initJsPsych({
         //show_progress_bar: true
     });
 
-    
+    //read
+    var trial_type = 0
+    var curr_trial_info = all_trials[0]
+    /*
+    //function to get trial info for a new trial, given its type
+    function get_trial(trial_type) {
+        return new Promise((resolve, reject) => {
+        $.getJSON({
+            url:"/get_trial",
+            data: {"trial_type": trial_type},
+            success: function(result) {
+                curr_trial_info = result
+                console.log(curr_trial_info)
+            }
+        })})
+    }
+    const helper1 = async(trial_type) => {
+        await get_trial(trial_type)
+    }
+    const helper2 = async(trial_type) => {
+        await helper1(trial_type)
+    }
+    helper2(trial_type)
+    console.log("ye")
+    console.log(curr_trial_info)
+    */
+
+    var instructions1 = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: "hey",
+        choices: ['haha hey']
+    }
     var test = {
         type: jsPsychCanvasGame,
+        game_data: curr_trial_info,
     }
 
-
-    timeline = [test]
+    timeline = [instructions1, test]
 
     jsPsych.run(timeline);
 

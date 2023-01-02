@@ -1,6 +1,6 @@
 import pymunk as pm
 import pygame as pg
-from utils import *
+from .utils import *
 
 class Ball():
     def __init__(self, x, y, game):

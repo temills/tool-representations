@@ -181,6 +181,9 @@ def point_inside_poly(vertices, px, py):
         v2 = vertices[0]
 
     #compare position, flip 'collision' variable back and forth
+    print(py)
+    print(v1)
+    print(v1[1])
     if (((v1[1] > py and v2[1] < py) or (v1[1] < py and v2[1] > py)) and
         (px < (v2[0] - v1[0]) * (py - v1[1]) / (v2[1] - v1[1]) + v1[0])):
             collision =  not collision

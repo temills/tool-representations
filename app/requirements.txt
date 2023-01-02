@@ -1,0 +1,4 @@
+nodeenv==1.7.0
+numpy==1.23.4
+pymunk==6.3.0
+

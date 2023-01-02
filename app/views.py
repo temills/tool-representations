@@ -3,30 +3,47 @@ from . import app, db
 from .models import Subject, Trial
 import datetime
 import json
-
+from .game import update_game, init_game
+from .generate_trials import get_trial_info
 
 # Views
-# converts function output to an http response to be displayed by a clienr
+# converts function output to an http response to be displayed by a client
 #responds to web request from this url:
-#@app.route('/study', methods=['GET', 'POST'])
-@app.route('/callback', methods=['GET', 'POST'])
-def get_update():
-    return {"x":"heyyyy buddy"}
-    #return update_game(request.args.get('user_data'))
 
-@app.route('/', methods=['GET', 'POST'])
+url_str = ""
+#url_str = "/study"
+
+@app.route(url_str + '/get_trial', methods=['GET'])
+def get_trial():
+    imd = request.args
+    trial_data = imd.to_dict(flat=False)
+    return get_trial_info(trial_data["trial_type"])
+
+@app.route(url_str + '/init_trial', methods=['POST'])
+def init_trial():
+    data = request.get_json(force=True)
+    init_game(data)
+    return "all good mate"
+
+@app.route(url_str + '/callback', methods=['GET'])
+def get_update():
+    imd = request.args
+    user_data = imd.to_dict(flat=False)
+    return update_game(user_data)
+
+
+@app.route(url_str + '/', methods=['GET', 'POST'])
 def experiment():
     if request.method == 'GET':
         #renders experiment on screen
-        #to get the desired game state information, must return from pymunk - each time we step, either download, or just call from here!
         #return render_template('index.html', posts=posts)
+        #init game here?
         return render_template('experiment.html')
     if request.method == 'POST':
         #sometimes we want to collect data, othertimes we want to collect info about user actions in the game
         #in our plugin, we will record if they press left or whatever and send this info somehow - just need to specify url
         #want to also return pygame game state (ball pos, tool pos, success, what else?)
         #or, can we do this without doing render template? can we just store the var in the html file?
-
 
         dd = request.get_json(force=True)['data']
         #subject information
